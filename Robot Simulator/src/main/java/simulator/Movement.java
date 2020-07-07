@@ -1,54 +1,24 @@
 package simulator;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
+import processing.core.PApplet;
 import processing.core.PVector;
 
-public class Movement {
-    PVector endVector;
-    PVector startVector;
-    double velocity;
-    int framesToMove;
 
-    Movement(PVector moveVector, double velocity) {
-        this.endVector = moveVector;
-        this.velocity = velocity;
-    }
 
-    public void setStartVector(PVector vector) {
-        this.startVector = vector;
-        this.endVector.add(vector);
-        this.framesToMove = this.getFramesToMove();
-    }
-
-    public PVector getDiff() {
-        return endVector.copy().sub(startVector);
-    }
-
-    public int getFramesToMove() {
-        return (int)Math.ceil(this.getDiff().mag()/(this.velocity))*RobotSimulation.FPS;
-    }
-
-    public boolean isComplete() {
-        return framesToMove == 0;
-    }
-
-    public void nextFrame() {
-        this.framesToMove--;
-    }
-
-    
-}
-
-class NewMovement {
+class Movement {
     Function<Float, Float> xFunc;
     Function<Float, Float> yFunc;
     float[] domain;
     float currFrame = 0;
+    float startFrame;
 
     PVector originalPos;
+    FieldObject fieldObject;
 
-    NewMovement(Function<Float, Float> xFunc, Function<Float, Float> yFunc, float[] domain) {
+    Movement(Function<Float, Float> xFunc, Function<Float, Float> yFunc, float[] domain) {
         this.xFunc = xFunc;
         this.yFunc = yFunc;
         this.domain = domain;
@@ -60,29 +30,88 @@ class NewMovement {
         return v2.copy().sub(v1);
     }
 
-    private FieldObject evalNextPos(FieldObject fieldObj) {
+    private void evalNextPos() {
         currFrame++;
-        float xMove = xFunc.apply(currFrame);
-        float yMove = yFunc.apply(currFrame);
+        float xMove = xFunc.apply(currFrame)/RobotSimulation.FPS;// - this.fieldObject.currentPos.x;//);
+        //Needs to be -yFunc because coord plane is weird in processing
+        float yMove = -yFunc.apply(currFrame)/RobotSimulation.FPS;// - this.fieldObject.currentPos.y;///RobotSimulation.FPS);
 
-        fieldObj.move(new PVector(xMove, yMove));
-        return fieldObj;
+        this.fieldObject.move(new PVector(xMove, yMove));
+        //PApplet.println(currFrame, xMove, yMove, this.fieldObject.currentPos);
     }
 
-    private boolean isComplete(PVector originalPos, PVector currentPos) {
-        PVector positionDiff = currentPos.copy().sub(originalPos);
+    public boolean isComplete() {
+        PVector positionDiff = this.fieldObject.currentPos.copy().sub(this.originalPos);
         // This might be bugged if there are movements in the opposite direction, we will see
         return positionDiff.mag() >= this.getMoveVector().mag();
     }
 
     public void startMove(FieldObject obj) {
+        this.fieldObject = obj;
         this.originalPos = obj.currentPos.copy();
+        this.startFrame = obj.sketch.frameCount;
     }
 
-    private void step(FieldObject obj) {
-        if (!isComplete(this.originalPos, obj.currentPos)) {
-            this.evalNextPos(obj);
+    public void step() {
+        if (!isComplete()) {
+            this.evalNextPos();
         }
 
     }
+}
+
+class MoveExecutor   {
+    private ArrayList<Movement> movements = new ArrayList<>();
+    FieldObject fieldObj;
+
+    MoveExecutor(FieldObject obj) {
+        this.fieldObj = obj;
+    }
+
+    public boolean hasMovement() {
+        return movements.size() != 0;
+    }
+
+    public Movement getNextMovement(boolean remove) {
+        if (this.movements.size() == 1) {
+            return null;
+        }
+
+        if (remove) {
+            this.movements.remove(0);
+            return this.movements.get(0);
+        }
+        return this.movements.get(1);
+    }
+
+    public Movement currentMovement() {
+        if (!this.hasMovement()) {
+            return null;
+        }
+
+        Movement current = this.movements.get(0);
+        if (current.isComplete()) {
+            PApplet.println("Changed movement!");
+            current = this.getNextMovement(true);
+            if (current != null) {
+                current.startMove(this.fieldObj);
+            } else {
+                this.movements.remove(0);
+            }
+        }
+        return current;
+    }
+
+    public void addMovement(Movement movement) {
+        movement.startMove(this.fieldObj);
+        this.movements.add(movement);
+    }
+
+    public void step() {
+        Movement currMovement = this.currentMovement();
+        if (currMovement != null) {
+            currMovement.step();
+        }
+    }
+
 }

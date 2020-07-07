@@ -1,8 +1,9 @@
 package simulator;
 
 import java.util.ArrayList;
-import processing.core.*;
+import java.util.function.Function;
 
+import processing.core.*;
 
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
@@ -10,8 +11,13 @@ public class RobotSimulation extends PApplet {
     public static int FPS = 60;
     int angle = 0;
 
+    int cols, rows;
+    int videoScale = 100;
+
     public void settings() {
         size(1000, 1000);
+        cols = 1000/videoScale;
+        rows = 1000/videoScale;
     }
 
     public void setup() {
@@ -19,27 +25,47 @@ public class RobotSimulation extends PApplet {
 
         this.roboticsField = Field.Default(this);
         this.robot = Robot.Default(this);
+
         this.roboticsField.addObject(robot);
-
-        this.robot.move(new PVector(100, 100), 50, false);
-
-
+        //float dist = (float)(200.0/Math.sqrt(2));
+        this.robot.moveRobot(new PVector(100, -100));
+        this.robot.moveRobot(new PVector(300, -200));
+        this.robot.moveRobot(new PVector(150, -200));
+        this.robot.moveRobot(new PVector(-400, +400));
 
     }
 
     public void draw() {
+        // Draw grid on screen
+        // Begin loop for columns
+        for (int i = 0; i < cols; i++) {
+            // Begin loop for rows
+            for (int j = 0; j < rows; j++) {
+
+                // Scaling up to draw a rectangle at (x,y)
+                int x = i * videoScale;
+                int y = j * videoScale;
+                fill(255);
+                stroke(0);
+                // For every column and row, a rectangle is drawn at an (x,y) location scaled
+                // and sized by videoScale.
+                rect(x, y, videoScale, videoScale);
+            }
+        }
         this.roboticsField.draw();
+
     }
 
     public Field getField() {
         return roboticsField;
     }
-    public static void main(String[] args){
-		String[] processingArgs = {"RobotSimulation"};
+
+    public static void main(String[] args) {
+        String[] processingArgs = { "RobotSimulation" };
         RobotSimulation simulation = new RobotSimulation();
-        
-		PApplet.runSketch(processingArgs, simulation);
-	}
+
+        PApplet.runSketch(processingArgs, simulation);
+    }
 }
 
 class Shapes {
@@ -50,7 +76,7 @@ class Shapes {
         PShape robotShape = sketch.createShape(PShape.RECT, 0, 0, width, height);
         robotShape.setFill(sketch.color(209, 56, 29));
         robotShape.setStroke(sketch.color(209, 209, 209));
-        robotShape.setStrokeWeight(4);
+        //robotShape.setStrokeWeight(4);
 
         return robotShape;
     }
@@ -69,7 +95,6 @@ class Shapes {
 
 }
 
-
 abstract class Drawable {
     PApplet sketch;
     PShape shape;
@@ -84,17 +109,18 @@ abstract class Drawable {
 
 class FieldObject extends Drawable {
     PVector currentPos;
-    ArrayList<Movement> movements= new ArrayList<>();
+    MoveExecutor mExecutor;
 
     FieldObject(PApplet sketch, PShape shape, PVector pos) {
         super(sketch, shape);
         this.currentPos = new PVector(pos.x, pos.y);
+        this.mExecutor = new MoveExecutor(this);
         this.setupObject();
     }
 
     public void setupObject() {
         this.sketch.shapeMode(PConstants.CENTER);
-        this.shape.translate(this.currentPos.x, this.currentPos.y);    
+        this.shape.translate(this.currentPos.x, this.currentPos.y);
     }
 
     public void move(PVector vector) {
@@ -102,58 +128,14 @@ class FieldObject extends Drawable {
         this.currentPos.add(vector);
     }
 
-    public void addMovement(Movement movement) {
-        this.movements.add(movement);
-    }
-
-    public Movement getCurrMovement() {
-        if (this.movements.size() != 0) {
-            return this.movements.get(0);
-        }
-        return null;
-    }
-
-    public Movement getNextMovement() {
-        this.movements.remove(0);
-        return this.getCurrMovement();
-    }
-
-    public void step() {
-        Movement currMovement = getCurrMovement();
-
-        if (currMovement == null) {
-            return;
-        }
-
-        if (currMovement.isComplete()) {
-            Movement nextMovement = this.getNextMovement();
-            nextMovement.setStartVector(currMovement.endVector);
-            currMovement = nextMovement;
-        }
-
-        if (currMovement != null) {
-            PVector diff = currMovement.getDiff();
-            int frames = currMovement.getFramesToMove();
-            frames = currMovement.getFramesToMove();
-            float changeInX = diff.x/frames;
-            float changeInY = diff.y/frames;
-
-            this.currentPos.add(new PVector(changeInX, changeInY));
-            this.shape.translate(changeInX, changeInY);
-
-            currMovement.nextFrame();
-        }
-    }
-
     public void draw() {
-        this.step();
+        this.mExecutor.step();
         this.sketch.shape(this.shape);
     }
 
 }
 
-
-class Robot extends FieldObject{
+class Robot extends FieldObject {
     double acceleration;
     double maxVelocity;
     double velocity = 0;
@@ -161,9 +143,8 @@ class Robot extends FieldObject{
 
     boolean isMoving = false;
 
-
     Robot(PApplet sketch, PShape robotShape, double acceleration, double maxVelocity) {
-        super(sketch, robotShape, new PVector(50, 50));
+        super(sketch, robotShape, new PVector(0, 0));
         this.acceleration = acceleration;
         this.maxVelocity = maxVelocity;
     }
@@ -172,12 +153,20 @@ class Robot extends FieldObject{
         return new Robot(sketch, Shapes.DefaultRobot(sketch), 1, 5);
     }
 
-    
+    public void moveRobot(PVector vector) {
+        Function<Float, Float> xFunc = (Float time) -> {
+            return time;
+        };
+
+        Function<Float, Float> yFunc = (Float time) -> {
+            return new Float(Math.tan(vector.heading()) * time);
+        };
+        this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, vector.x }));
+    }
 
 }
 
-
-class Field extends FieldObject{
+class Field extends FieldObject {
     ArrayList<FieldObject> fieldObjects = new ArrayList<>();
 
     Field(PApplet sketch, PShape fieldShape, PVector pos) {
@@ -193,10 +182,9 @@ class Field extends FieldObject{
     }
 
     public void draw() {
-        super.draw();
+        // super.draw();
         for (FieldObject obj : this.fieldObjects) {
             obj.draw();
         }
     }
 }
-
