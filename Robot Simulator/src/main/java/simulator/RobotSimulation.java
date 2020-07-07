@@ -22,13 +22,7 @@ public class RobotSimulation extends PApplet {
         this.roboticsField.addObject(robot);
 
         this.robot.move(new PVector(100, 100), 50, false);
-        this.robot.move(new PVector(100, 50), 50, false);
-        this.robot.move(new PVector(50, 100), 150, false);
-        this.robot.move(new PVector(-100, -100), 450, false);
-        this.robot.move(new PVector(400, 200), 50, false);
-        this.robot.move(new PVector(-100, -300), 150, false);
-        this.robot.move(new PVector(300, 300), 250, false);
-        this.robot.move(new PVector(-100, -100), 50, false);
+
 
 
     }
@@ -103,12 +97,9 @@ class FieldObject extends Drawable {
         this.shape.translate(this.currentPos.x, this.currentPos.y);    
     }
 
-    public void move(PVector vector, double velocity, boolean rotateFirst) {
-        this.addMovement(new Movement(vector, velocity));
-
-        if (this.movements.size() == 1) {
-            this.movements.get(0).setStartVector(this.currentPos.copy());
-        }
+    public void move(PVector vector) {
+        this.shape.translate(vector.x, vector.y);
+        this.currentPos.add(vector);
     }
 
     public void addMovement(Movement movement) {
