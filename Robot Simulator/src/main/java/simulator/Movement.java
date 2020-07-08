@@ -32,18 +32,19 @@ class Movement {
 
     private void evalNextPos() {
         currFrame++;
-        float xMove = xFunc.apply(currFrame)/RobotSimulation.FPS;// - this.fieldObject.currentPos.x;//);
+        float xMove = xFunc.apply(currFrame);// - this.fieldObject.currentPos.x;//);
         //Needs to be -yFunc because coord plane is weird in processing
-        float yMove = -yFunc.apply(currFrame)/RobotSimulation.FPS;// - this.fieldObject.currentPos.y;///RobotSimulation.FPS);
+        float yMove = -yFunc.apply(currFrame);// - this.fieldObject.currentPos.y;///RobotSimulation.FPS);
 
         this.fieldObject.move(new PVector(xMove, yMove));
-        //PApplet.println(currFrame, xMove, yMove, this.fieldObject.currentPos);
+        PApplet.println(currFrame, xMove, yMove, this.fieldObject.currentPos);
     }
 
     public boolean isComplete() {
-        PVector positionDiff = this.fieldObject.currentPos.copy().sub(this.originalPos);
+       // PVector positionDiff = this.fieldObject.currentPos.copy().sub(this.originalPos);
         // This might be bugged if there are movements in the opposite direction, we will see
-        return positionDiff.mag() >= this.getMoveVector().mag();
+        //return positionDiff.mag() >= this.getMoveVector().mag();
+        return this.currFrame >= this.domain[1];
     }
 
     public void startMove(FieldObject obj) {

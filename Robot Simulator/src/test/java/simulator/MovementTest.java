@@ -7,12 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Unit test for simple App.
  */
-class AppTest {
+class MovementTest {
     /**
      * Rigorous Test.
      */
     @Test
-    void testApp() {
-        assertEquals(1, 1);
+    void testMovement() {
+        
     }
 }

@@ -8,7 +8,7 @@ import processing.core.*;
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
     private Robot robot;
-    public static int FPS = 60;
+    public static int FPS = 1000;
     int angle = 0;
 
     int cols, rows;
@@ -27,17 +27,13 @@ public class RobotSimulation extends PApplet {
         this.robot = Robot.Default(this);
 
         this.roboticsField.addObject(robot);
-        //float dist = (float)(200.0/Math.sqrt(2));
-        this.robot.moveRobot(new PVector(100, -100));
-        this.robot.moveRobot(new PVector(300, -200));
-        this.robot.moveRobot(new PVector(150, -200));
-        this.robot.moveRobot(new PVector(-400, +400));
 
+        this.robot.moveRobot(new PVector(500, -1000), 100);
+    
+        this.robot.circle(1000, (float)(2*Math.PI*1000)/2);
     }
 
-    public void draw() {
-        // Draw grid on screen
-        // Begin loop for columns
+    private void drawGrid() {
         for (int i = 0; i < cols; i++) {
             // Begin loop for rows
             for (int j = 0; j < rows; j++) {
@@ -52,8 +48,12 @@ public class RobotSimulation extends PApplet {
                 rect(x, y, videoScale, videoScale);
             }
         }
-        this.roboticsField.draw();
+    }
 
+    public void draw() {
+        // Draw grid on screen
+        // Begin loop for columns
+        this.roboticsField.draw();
     }
 
     public Field getField() {
@@ -70,10 +70,12 @@ public class RobotSimulation extends PApplet {
 
 class Shapes {
     public static PShape DefaultRobot(PApplet sketch) {
-        int width = 100;
-        int height = 100;
+        int width = 10;
+        int height = 10;
 
-        PShape robotShape = sketch.createShape(PShape.RECT, 0, 0, width, height);
+        //PShape robotShape = sketch.createShape(PShape.RECT, 0, 0, width, height);
+        
+        PShape robotShape = sketch.createShape(PShape.ELLIPSE, 0, 0, width, height);
         robotShape.setFill(sketch.color(209, 56, 29));
         robotShape.setStroke(sketch.color(209, 209, 209));
         //robotShape.setStrokeWeight(4);
@@ -129,7 +131,9 @@ class FieldObject extends Drawable {
     }
 
     public void draw() {
-        this.mExecutor.step();
+        if (this.mExecutor.hasMovement()) {
+            this.mExecutor.step();
+        }
         this.sketch.shape(this.shape);
     }
 
@@ -153,15 +157,59 @@ class Robot extends FieldObject {
         return new Robot(sketch, Shapes.DefaultRobot(sketch), 1, 5);
     }
 
-    public void moveRobot(PVector vector) {
+    public void moveRobot(PVector vector, float velocity) {
+        // The formula to find the number of frames needed is (distance in pixels/velocity in pixels/sec) = seconds needed
+        // seconds needed * FPS to get the total number of frames for the movement
+        float framesToTravel = (vector.mag()/velocity)*RobotSimulation.FPS;
         Function<Float, Float> xFunc = (Float time) -> {
-            return time;
+            return vector.x/framesToTravel;
         };
 
         Function<Float, Float> yFunc = (Float time) -> {
-            return new Float(Math.tan(vector.heading()) * time);
+            return vector.y/framesToTravel;//new Float(Math.tan(vector.heading()) * time);
         };
-        this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, vector.x }));
+
+        this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0,  framesToTravel}));
+    }
+
+    public void circle(double radius, float velocity) {
+        // I have no idea if the velocity is actually working in pixels/second. I think it does
+
+        // The formula to find the number of frames needed is (distance in pixels/velocity in pixels/sec) = seconds needed
+        // seconds needed * FPS to get the total number of frames for the movement
+        float framesToTravelAngular = (float)((2*Math.PI*radius)/velocity)*RobotSimulation.FPS;
+        
+        // Apparently a framesToTravelXY is needed or else the radius of the circle does not come out right
+        // And for whatever reason you have to multiply by 2 again... Haven't figured out why but it works!!!
+        double framesToTravelXY = (float)((4*radius)/velocity)*RobotSimulation.FPS;
+
+        Function<Float, Float> xFunc = (Float time) -> {
+            // Based on how far along in the animation the shape is currentFrameToDegrees calculated what angle to
+            // Evaluate the function for
+            double currentFrameToDegrees = 360*time/framesToTravelAngular;
+            double xDist = radius*Math.cos(Math.toRadians(currentFrameToDegrees));
+            return new Float(2*xDist/framesToTravelXY);
+        };
+
+        Function<Float, Float> yFunc = (Float time) -> {
+            // Based on how far along in the animation the shape is currentFrameToDegrees calculated what angle to
+            // Evaluate the function for
+            double currentFrameToDegrees = 360*time/framesToTravelAngular;
+            double yDist = radius*Math.sin(Math.toRadians(currentFrameToDegrees));
+            return new Float(2*yDist/framesToTravelXY);
+        };
+        this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, framesToTravelAngular}));
+    }
+
+    public void sin(double amplitude, double period, double periodLen) {
+        Function<Float, Float> xFunc = (Float time) -> {
+            return new Float(period*periodLen);
+        };
+
+        Function<Float, Float> yFunc = (Float time) -> {
+            return new Float(amplitude*Math.sin(Math.toRadians(time)*period));
+        };
+        this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, 360}));
     }
 
 }
