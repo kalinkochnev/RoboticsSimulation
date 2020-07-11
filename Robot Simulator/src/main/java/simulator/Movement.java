@@ -41,9 +41,6 @@ class Movement {
     }
 
     public boolean isComplete() {
-       // PVector positionDiff = this.fieldObject.currentPos.copy().sub(this.originalPos);
-        // This might be bugged if there are movements in the opposite direction, we will see
-        //return positionDiff.mag() >= this.getMoveVector().mag();
         return this.currFrame >= this.domain[1];
     }
 

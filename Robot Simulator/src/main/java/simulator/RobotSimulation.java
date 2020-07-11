@@ -8,7 +8,7 @@ import processing.core.*;
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
     private Robot robot;
-    public static int FPS = 1000;
+    public static int FPS = 200;
     int angle = 0;
 
     int cols, rows;
@@ -28,9 +28,28 @@ public class RobotSimulation extends PApplet {
 
         this.roboticsField.addObject(robot);
 
-        this.robot.moveRobot(new PVector(500, -1000), 100);
-    
-        this.robot.circle(1000, (float)(2*Math.PI*1000)/2);
+        this.robot.moveRobot(new PVector(500-50-50+3, -950+100+50), 300);
+
+        float circleRadius = (1000-(2*50)-(2*10)-75);
+        
+        
+        this.robot.circle(circleRadius, (float)(2*Math.PI*circleRadius)/2);
+        this.robot.moveRobot(new PVector(400, 400), 100);
+        this.robot.moveRobot(new PVector(-400, 400), 200);
+        this.robot.moveRobot(new PVector(-400, -400), 100);
+        this.robot.moveRobot(new PVector(400, -400), 200);
+
+        this.robot.moveRobot(new PVector(0, 800), 500);
+        this.robot.moveRobot(new PVector(0, -800), 500);
+
+        this.robot.moveRobot(new PVector(-400, 0), 500);
+        this.robot.moveRobot(new PVector(800, 0), 500);
+        this.robot.moveRobot(new PVector(-800, 0), 500);
+
+        this.robot.moveRobot(new PVector(400, 400), 500);
+
+
+
     }
 
     private void drawGrid() {
@@ -41,8 +60,8 @@ public class RobotSimulation extends PApplet {
                 // Scaling up to draw a rectangle at (x,y)
                 int x = i * videoScale;
                 int y = j * videoScale;
-                fill(255);
-                stroke(0);
+                noFill();
+                stroke(2);
                 // For every column and row, a rectangle is drawn at an (x,y) location scaled
                 // and sized by videoScale.
                 rect(x, y, videoScale, videoScale);
@@ -54,6 +73,7 @@ public class RobotSimulation extends PApplet {
         // Draw grid on screen
         // Begin loop for columns
         this.roboticsField.draw();
+        drawGrid();
     }
 
     public Field getField() {
@@ -70,12 +90,12 @@ public class RobotSimulation extends PApplet {
 
 class Shapes {
     public static PShape DefaultRobot(PApplet sketch) {
-        int width = 10;
-        int height = 10;
+        int width = 100;
+        int height = 100;
 
-        //PShape robotShape = sketch.createShape(PShape.RECT, 0, 0, width, height);
+        PShape robotShape = sketch.createShape(PShape.RECT, 0, 0, width, height);
         
-        PShape robotShape = sketch.createShape(PShape.ELLIPSE, 0, 0, width, height);
+        // PShape robotShape = sketch.createShape(PShape.ELLIPSE, 0, 0, width, height);
         robotShape.setFill(sketch.color(209, 56, 29));
         robotShape.setStroke(sketch.color(209, 209, 209));
         //robotShape.setStrokeWeight(4);
@@ -148,7 +168,7 @@ class Robot extends FieldObject {
     boolean isMoving = false;
 
     Robot(PApplet sketch, PShape robotShape, double acceleration, double maxVelocity) {
-        super(sketch, robotShape, new PVector(0, 0));
+        super(sketch, robotShape, new PVector(50, 50));
         this.acceleration = acceleration;
         this.maxVelocity = maxVelocity;
     }
@@ -230,7 +250,7 @@ class Field extends FieldObject {
     }
 
     public void draw() {
-        // super.draw();
+        super.draw();
         for (FieldObject obj : this.fieldObjects) {
             obj.draw();
         }
