@@ -8,7 +8,7 @@ import processing.core.*;
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
     private Robot robot;
-    public static int FPS = 200;
+    public static int FPS = 60;
     int angle = 0;
 
     int cols, rows;
@@ -32,7 +32,7 @@ public class RobotSimulation extends PApplet {
 
         float circleRadius = (1000-(2*50)-(2*10)-75);
         
-        
+
         this.robot.circle(circleRadius, (float)(2*Math.PI*circleRadius)/2);
         this.robot.moveRobot(new PVector(400, 400), 100);
         this.robot.moveRobot(new PVector(-400, 400), 200);
@@ -47,9 +47,6 @@ public class RobotSimulation extends PApplet {
         this.robot.moveRobot(new PVector(-800, 0), 500);
 
         this.robot.moveRobot(new PVector(400, 400), 500);
-
-
-
     }
 
     private void drawGrid() {
@@ -177,6 +174,10 @@ class Robot extends FieldObject {
         return new Robot(sketch, Shapes.DefaultRobot(sketch), 1, 5);
     }
 
+    public void moveRobot(double xDir, double yDir, float velocity) {
+        this.moveRobot(new PVector((float)xDir, (float)yDir), velocity);
+    }
+
     public void moveRobot(PVector vector, float velocity) {
         // The formula to find the number of frames needed is (distance in pixels/velocity in pixels/sec) = seconds needed
         // seconds needed * FPS to get the total number of frames for the movement
@@ -208,7 +209,7 @@ class Robot extends FieldObject {
             // Evaluate the function for
             double currentFrameToDegrees = 360*time/framesToTravelAngular;
             double xDist = radius*Math.cos(Math.toRadians(currentFrameToDegrees));
-            return new Float(2*xDist/framesToTravelXY);
+            return (float)(2*xDist/framesToTravelXY);
         };
 
         Function<Float, Float> yFunc = (Float time) -> {
@@ -216,18 +217,18 @@ class Robot extends FieldObject {
             // Evaluate the function for
             double currentFrameToDegrees = 360*time/framesToTravelAngular;
             double yDist = radius*Math.sin(Math.toRadians(currentFrameToDegrees));
-            return new Float(2*yDist/framesToTravelXY);
+            return (float)(2*yDist/framesToTravelXY);
         };
         this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, framesToTravelAngular}));
     }
 
     public void sin(double amplitude, double period, double periodLen) {
         Function<Float, Float> xFunc = (Float time) -> {
-            return new Float(period*periodLen);
+            return (float)(period*periodLen);
         };
 
         Function<Float, Float> yFunc = (Float time) -> {
-            return new Float(amplitude*Math.sin(Math.toRadians(time)*period));
+            return (float)(amplitude*Math.sin(Math.toRadians(time)*period));
         };
         this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, 360}));
     }
