@@ -37,7 +37,6 @@ class Movement {
         float yMove = -yFunc.apply(currFrame);// - this.fieldObject.currentPos.y;///RobotSimulation.FPS);
 
         this.fieldObject.move(new PVector(xMove, yMove));
-        PApplet.println(currFrame, xMove, yMove, this.fieldObject.currentPos);
     }
 
     public boolean isComplete() {
@@ -89,7 +88,6 @@ class MoveExecutor   {
 
         Movement current = this.movements.get(0);
         if (current.isComplete()) {
-            PApplet.println("Changed movement!");
             current = this.getNextMovement(true);
             if (current != null) {
                 current.startMove(this.fieldObj);

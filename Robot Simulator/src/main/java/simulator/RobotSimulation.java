@@ -7,7 +7,6 @@ import processing.core.*;
 
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
-    private Robot robot;
     public static int FPS = 60;
     int angle = 0;
 
@@ -22,9 +21,7 @@ public class RobotSimulation extends PApplet {
 
     public void setup() {
         frameRate(RobotSimulation.FPS);
-
         this.roboticsField = Field.Default(this);
-        this.robot = Robot.Default(this);
 
         SimpleRobot robot = Practice.setupRobot(this, Shapes.DefaultRobot(this));
         this.roboticsField.addObject(robot.robot);
