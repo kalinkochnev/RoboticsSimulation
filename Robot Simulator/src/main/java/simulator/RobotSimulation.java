@@ -8,7 +8,7 @@ import processing.core.*;
 public class RobotSimulation extends PApplet {
     private Field roboticsField;
     private Robot robot;
-    public static int FPS = 200;
+    public static int FPS = 60;
     int angle = 0;
 
     int cols, rows;
@@ -26,15 +26,9 @@ public class RobotSimulation extends PApplet {
         this.roboticsField = Field.Default(this);
         this.robot = Robot.Default(this);
 
-        this.roboticsField.addObject(robot);
-
-        this.robot.moveRobot(new PVector(500-50-50, -950+100+50), 300);
-
-        float circleRadius = (1000-(2*50)-(2*10)-75);
-        
-        
-        this.robot.circle(circleRadius, (float)(2*Math.PI*circleRadius)/2);
-        PApplet.print(this.robot.get)
+        SimpleRobot robot = Practice.setupRobot(this, Shapes.DefaultRobot(this));
+        this.roboticsField.addObject(robot.robot);
+        Practice.robotMovements(robot);
     }
 
     private void drawGrid() {
@@ -55,8 +49,6 @@ public class RobotSimulation extends PApplet {
     }
 
     public void draw() {
-        // Draw grid on screen
-        // Begin loop for columns
         this.roboticsField.draw();
         drawGrid();
     }
@@ -71,6 +63,7 @@ public class RobotSimulation extends PApplet {
 
         PApplet.runSketch(processingArgs, simulation);
     }
+
 }
 
 class Shapes {
@@ -118,11 +111,16 @@ class FieldObject extends Drawable {
     PVector currentPos;
     MoveExecutor mExecutor;
 
-    FieldObject(PApplet sketch, PShape shape, PVector pos) {
+    public FieldObject(PApplet sketch, PShape shape, PVector pos) {
         super(sketch, shape);
         this.currentPos = new PVector(pos.x, pos.y);
         this.mExecutor = new MoveExecutor(this);
         this.setupObject();
+    }
+
+    public FieldObject(PApplet sketch, PShape shape) {
+        super(sketch, shape);
+        this.mExecutor = new MoveExecutor(this);
     }
 
     public void setupObject() {
@@ -145,21 +143,24 @@ class FieldObject extends Drawable {
 }
 
 class Robot extends FieldObject {
-    double acceleration;
-    double maxVelocity;
-    double velocity = 0;
     double angle = 0;
 
     boolean isMoving = false;
 
-    Robot(PApplet sketch, PShape robotShape, double acceleration, double maxVelocity) {
+    Robot(PApplet sketch, PShape robotShape) {
         super(sketch, robotShape, new PVector(50, 50));
-        this.acceleration = acceleration;
-        this.maxVelocity = maxVelocity;
+    }
+
+    Robot(PApplet sketch, PShape robotShape, PVector startPos) {
+        super(sketch, robotShape, startPos);
     }
 
     public static Robot Default(PApplet sketch) {
-        return new Robot(sketch, Shapes.DefaultRobot(sketch), 1, 5);
+        return new Robot(sketch, Shapes.DefaultRobot(sketch));
+    }
+
+    public void moveRobot(float xDir, float yDir, float velocity) {
+        this.moveRobot(new PVector(xDir, yDir), velocity);
     }
 
     public void moveRobot(PVector vector, float velocity) {
@@ -175,6 +176,7 @@ class Robot extends FieldObject {
         };
 
         this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0,  framesToTravel}));
+
     }
 
     public void circle(double radius, float velocity) {
@@ -193,7 +195,7 @@ class Robot extends FieldObject {
             // Evaluate the function for
             double currentFrameToDegrees = 360*time/framesToTravelAngular;
             double xDist = radius*Math.cos(Math.toRadians(currentFrameToDegrees));
-            return new Float(2*xDist/framesToTravelXY);
+            return (float)(2*xDist/framesToTravelXY);
         };
 
         Function<Float, Float> yFunc = (Float time) -> {
@@ -201,18 +203,18 @@ class Robot extends FieldObject {
             // Evaluate the function for
             double currentFrameToDegrees = 360*time/framesToTravelAngular;
             double yDist = radius*Math.sin(Math.toRadians(currentFrameToDegrees));
-            return new Float(2*yDist/framesToTravelXY);
+            return (float)(2*yDist/framesToTravelXY);
         };
         this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, framesToTravelAngular}));
     }
 
     public void sin(double amplitude, double period, double periodLen) {
         Function<Float, Float> xFunc = (Float time) -> {
-            return new Float(period*periodLen);
+            return (float)(period*periodLen);
         };
 
         Function<Float, Float> yFunc = (Float time) -> {
-            return new Float(amplitude*Math.sin(Math.toRadians(time)*period));
+            return (float)(amplitude*Math.sin(Math.toRadians(time)*period));
         };
         this.mExecutor.addMovement(new Movement(xFunc, yFunc, new float[] { 0, 360}));
     }
