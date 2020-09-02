@@ -28,28 +28,13 @@ public class RobotSimulation extends PApplet {
 
         this.roboticsField.addObject(robot);
 
-        this.robot.moveRobot(new PVector(500-50-50+3, -950+100+50), 300);
+        this.robot.moveRobot(new PVector(500-50-50, -950+100+50), 300);
 
         float circleRadius = (1000-(2*50)-(2*10)-75);
         
         
         this.robot.circle(circleRadius, (float)(2*Math.PI*circleRadius)/2);
-        this.robot.moveRobot(new PVector(400, 400), 100);
-        this.robot.moveRobot(new PVector(-400, 400), 200);
-        this.robot.moveRobot(new PVector(-400, -400), 100);
-        this.robot.moveRobot(new PVector(400, -400), 200);
-
-        this.robot.moveRobot(new PVector(0, 800), 500);
-        this.robot.moveRobot(new PVector(0, -800), 500);
-
-        this.robot.moveRobot(new PVector(-400, 0), 500);
-        this.robot.moveRobot(new PVector(800, 0), 500);
-        this.robot.moveRobot(new PVector(-800, 0), 500);
-
-        this.robot.moveRobot(new PVector(400, 400), 500);
-
-
-
+        PApplet.print(this.robot.get)
     }
 
     private void drawGrid() {
